@@ -1,0 +1,108 @@
+:root { --cream: #fff6e5; --yellow: #f4b81f; --yellow-deep: #c98a00; --pink: #f27fb4; --brown: #3b2a20;
+  --font: 'Fredoka', ui-rounded, 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', system-ui, sans-serif; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--brown); touch-action: none; overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none;
+  font-family: var(--font); color: var(--cream); -webkit-user-select: none; user-select: none; }
+#app canvas { display: block; cursor: grab; }
+#app canvas:active { cursor: grabbing; }
+
+#vignette { position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 45%, rgba(30,18,10,0) 48%, rgba(30,18,10,.5) 100%); }
+#confetti { position: fixed; left: 50%; top: 46%; width: 0; height: 0; pointer-events: none; z-index: 5; }
+#confetti i { position: absolute; left: 0; top: 0; border-radius: 2px; }
+
+/* ---- title + win screens ---- */
+#menu, #win { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding-bottom: 16vh; text-align: center; opacity: 0; pointer-events: none; transition: opacity .45s ease;
+  background: radial-gradient(ellipse at 50% 38%, rgba(59,42,32,.62), rgba(59,42,32,.18) 62%, rgba(59,42,32,0) 80%); }
+#menu.on, #win.on { opacity: 1; pointer-events: auto; }
+#menu { padding-bottom: 30vh; }
+#menu h1, #win h2 { margin: 0; font-weight: 600; line-height: 1; letter-spacing: .5px; color: var(--cream);
+  text-shadow: 0 4px 0 rgba(0,0,0,.18); }
+#win h2 { animation: wobble 5s ease-in-out infinite; }
+#menu h1 span { display: inline-block; animation: bob 2.6s ease-in-out infinite; }
+#win.on h2 { animation: pop-in .5s cubic-bezier(.3,1.6,.5,1) both, wobble 5s ease-in-out .5s infinite; }
+#menu h1 { font-size: clamp(54px, 10vw, 104px); }
+#win h2 { font-size: clamp(44px, 8vw, 80px); }
+#menu p, #win p { margin: 2px 0 22px; font-size: clamp(15px, 2vw, 19px); font-weight: 400; opacity: .85; }
+.squiggle { width: clamp(150px, 22vw, 230px); height: 14px; margin-top: 4px; }
+.squiggle path { fill: none; stroke: var(--pink); stroke-width: 4; stroke-linecap: round; }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-7px) rotate(2deg); } }
+@keyframes pop-in { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+/* win: words up top, buttons at the bottom, so the Weiner Man in his hole stays in view */
+#win { justify-content: space-between; padding: 7vh 0 9vh; box-sizing: border-box;
+  background: linear-gradient(rgba(59,42,32,.55), rgba(59,42,32,0) 30%, rgba(59,42,32,0) 68%, rgba(59,42,32,.5)); }
+#win .top, #win .bottom { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+#win p { margin-bottom: 0; }
+body:has(#win.on) #back, body:has(#win.on) #tools, body:has(#win.on) #controls, body:has(#win.on) #gyro { opacity: 0; pointer-events: none; }
+@keyframes wobble { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg) translateY(-3px); } }
+
+button.big { font: 600 22px var(--font); letter-spacing: .5px; padding: 13px 44px 14px; border: 0; border-radius: 999px;
+  background: var(--yellow); color: var(--brown); cursor: pointer; box-shadow: 0 6px 0 var(--yellow-deep), 0 14px 24px rgba(0,0,0,.28);
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease; }
+button.big:hover { background: #ffc93a; transform: translateY(-2px) rotate(-2deg); box-shadow: 0 8px 0 var(--yellow-deep), 0 18px 26px rgba(0,0,0,.28); }
+button.big:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--yellow-deep), 0 6px 12px rgba(0,0,0,.28); }
+button.big.small { font-size: 15px; padding: 9px 20px 10px; box-shadow: 0 4px 0 var(--yellow-deep), 0 8px 14px rgba(0,0,0,.25); }
+
+button.ghost { font: 500 16px var(--font); padding: 7px 16px 8px; border: 0; border-radius: 999px; cursor: pointer;
+  color: var(--cream); background: rgba(59,42,32,.45); box-shadow: inset 0 0 0 2px rgba(255,246,229,.55);
+  transition: transform .12s ease, background .12s ease; }
+button.ghost:hover { background: rgba(59,42,32,.7); transform: rotate(-2deg); }
+button.ghost:active { transform: translateY(2px); }
+button { touch-action: manipulation; }
+button.ghost.active { background: var(--cream); color: var(--brown); box-shadow: 0 3px 0 rgba(0,0,0,.25); }
+#back, #tools, #gyro { position: fixed; opacity: 0; pointer-events: none; transition: opacity .4s ease; }
+#back { left: max(18px, env(safe-area-inset-left)); top: max(16px, env(safe-area-inset-top)); }
+#tools { right: max(18px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top)); display: flex; gap: 10px; }
+#again { font-size: 20px; line-height: 1; padding: 6px 13px 8px; }
+#gyro { right: max(18px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); display: none; }
+#gyro.has { display: block; }
+#back.on, #tools.on, #gyro.on { opacity: 1; pointer-events: auto; }
+#winMenu { margin-top: 18px; }
+
+/* ---- in-game ---- */
+#hint { position: fixed; left: 0; right: 0; top: 7vh; text-align: center; font-size: clamp(22px, 3.4vw, 36px); font-weight: 500;
+  line-height: 1.25; opacity: 0; pointer-events: none; text-shadow: 0 3px 0 rgba(0,0,0,.2), 0 0 24px rgba(59,42,32,.7); }
+#controls { position: fixed; left: max(18px, env(safe-area-inset-left)); bottom: max(16px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; font-size: 15px;
+  opacity: 0; pointer-events: none; transition: opacity .5s ease .4s; text-shadow: 0 1px 4px rgba(0,0,0,.55); }
+#controls.on { opacity: .9; }
+kbd { display: inline-block; min-width: 12px; margin-right: 3px; padding: 1px 7px 2px; border-radius: 8px; text-align: center;
+  font: 500 13px var(--font); color: var(--brown); background: var(--cream); box-shadow: 0 2px 0 rgba(0,0,0,.28); }
+#toast { position: fixed; left: 50%; top: 20%; transform: translateX(-50%) rotate(-2deg); padding: 9px 20px 10px; border-radius: 999px;
+  background: var(--cream); color: var(--brown); font-size: 17px; font-weight: 500; opacity: 0; transition: opacity .2s; pointer-events: none;
+  box-shadow: 0 4px 0 rgba(0,0,0,.2); }
+#toast.on { opacity: 1; }
+
+/* ---- tuning (press T) ---- */
+#stats { position: fixed; left: 18px; top: 62px; display: none; font: 12px/1.5 ui-monospace, Menlo, monospace; opacity: .85;
+  white-space: pre; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+#stats.on { display: block; }
+.lil-gui { --width: 285px; }
+.lil-gui.autoPlace { top: 64px; right: 12px; }
+/* phones and tablets: bigger tap targets, tighter text */
+@media (pointer: coarse) {
+  button.ghost { font-size: 17px; padding: 10px 18px 11px; min-height: 44px; }
+  #again { font-size: 22px; padding: 8px 15px 10px; }
+  #controls { font-size: 15px; opacity: 0; }
+  #controls.on { opacity: .85; }
+  button.big { padding: 15px 52px 16px; }
+  /* bottom of the screen: tilt button centred, the one-line hint under it */
+  #controls { left: 0; right: 0; align-items: center; text-align: center; }
+  #gyro { left: 0; right: 0; width: fit-content; margin: 0 auto; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 34px); }
+}
+@media (max-width: 700px) {
+  .lil-gui { --width: 240px; }
+  #hint { top: calc(max(16px, env(safe-area-inset-top)) + 62px); font-size: clamp(19px, 5.4vw, 26px); }
+  #menu { padding-bottom: 34vh; }
+  #toast { font-size: 15px; white-space: nowrap; }
+}
+/* short landscape phones: keep the goal text out of the plate's way */
+@media (max-height: 480px) {
+  #hint { top: 10px; font-size: 18px; }
+  #hint br { display: none; }
+  #menu { padding-bottom: 18vh; gap: 2px; }
+  #menu h1 { font-size: 48px; }
+  #menu p { margin-bottom: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) { #menu h1 span, #win h2, #win.on h2 { animation: none; } }
