@@ -29,7 +29,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--brown)
 .squiggle path { fill: none; stroke: var(--pink); stroke-width: 4; stroke-linecap: round; }
 @keyframes bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-7px) rotate(2deg); } }
 @keyframes pop-in { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-/* win: words up top, buttons at the bottom, so the Weiner Man in his hole stays in view */
+/* win: words up top, buttons at the bottom, so the Wiener Man in his hole stays in view */
 #win { justify-content: space-between; padding: 7vh 0 9vh; box-sizing: border-box;
   background: linear-gradient(rgba(59,42,32,.55), rgba(59,42,32,0) 30%, rgba(59,42,32,0) 68%, rgba(59,42,32,.5)); }
 #win .top, #win .bottom { display: flex; flex-direction: column; align-items: center; gap: 6px; }

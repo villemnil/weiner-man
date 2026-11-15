@@ -33,11 +33,11 @@ const letters = (t: string): string =>
   [...t].map((ch, i) => (ch === ' ' ? ' ' : `<span style="animation-delay:${(i * 0.09).toFixed(2)}s">${ch}</span>`)).join('');
 const squiggle = `<svg class="squiggle" viewBox="0 0 220 14" aria-hidden="true"><path d="M3 8 q13 -9 26 0 t26 0 t26 0 t26 0 t26 0 t26 0 t26 0 t26 0" /></svg>`;
 const menu = el(`<div id="menu" class="on">
-  <h1 aria-label="Weiner Man">${letters('Weiner Man')}</h1>${squiggle}
+  <h1 aria-label="Wiener Man">${letters('Wiener Man')}</h1>${squiggle}
   <p>a wobbly little tilting toy</p>
   <jelly-button id="start" size="large">Start</jelly-button>
   <jelly-button id="menuScores" size="small" variant="white">Best times</jelly-button></div>`);
-const hintEl = el(`<div id="hint">Get the Weiner Man to stand<br>in the middle of the plate</div>`);
+const hintEl = el(`<div id="hint">Get the Wiener Man to stand<br>in the middle of the plate</div>`);
 const touch = matchMedia('(pointer: coarse)').matches;
 const controlsEl = el(touch
   ? `<div id="controls"><span>drag anywhere to tilt the plate</span></div>`
@@ -53,7 +53,7 @@ const timerEl = el(`<div id="timer">0.0</div>`);
 const stats = el(`<div id="stats"></div>`);
 const toast = el(`<div id="toast"></div>`);
 const win = el(`<div id="win"><div class="top"><h2>You did it!</h2>${squiggle}
-    <div id="winTime"></div><p>Weiner is up</p></div>
+    <div id="winTime"></div><p>Wiener is up</p></div>
   <div class="bottom">
     <form id="scoreForm" autocomplete="off">
       <jelly-input id="nameIn" size="small" placeholder="your name" label="Your name" no-autofill></jelly-input>

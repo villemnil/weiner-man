@@ -1,6 +1,6 @@
-# Weiner Man
+# Wiener Man
 
-A wobbly little tilting toy for the browser: tilt the yellow plate and get the Weiner Man to
+A wobbly little tilting toy for the browser: tilt the yellow plate and get the Wiener Man to
 stand in the hole in the middle. He is a hollow capsule with a loose steel ball inside, so he
 tumbles end over end instead of rolling.
 
