@@ -106,7 +106,7 @@ let tuning = false;
 let runClean = true; // false once the tuning panel has been open during a run: no score for that one
 let finalMs = 0;
 
-const CAM_PLAY: [[number, number, number], [number, number, number]] = [[0, 28, 24.8], [0, 0, 2.3]];
+const CAM_PLAY: [[number, number, number], [number, number, number]] = [[0, 30.2, 26.8], [0, 0, 2.5]];
 const CAM_MENU: [[number, number, number], [number, number, number]] = [[0, 16, 27], [0, 0, -5]];
 
 function restart(scene: SceneName = ui.scene): void {

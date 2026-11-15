@@ -128,7 +128,7 @@ export class View {
     this.scene.fog = new THREE.Fog('#3b2a20', 90, 220);
 
     this.camera = new THREE.PerspectiveCamera(34, 1, 1, 400);
-    this.camera.position.set(0, 28, 24.8);
+    this.camera.position.set(0, 30.2, 26.8);
     this.controls = new OrbitControls(this.camera, r.domElement);
     this.controls.target.set(0, 0, 2.1);
     this.controls.saveState();
