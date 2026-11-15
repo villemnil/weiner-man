@@ -303,7 +303,7 @@ const G = sim.plate.g;
 const fGeo = gui.addFolder('Plate shape');
 fGeo.add(G, 'depth', 0.3, 1.5, 0.05).name('bowl depth (cm)');
 fGeo.add(G, 'cupR', 0.72, 2, 0.01).name('cup curvature R (cm)');
-fGeo.add(G, 'cupDepth', 0.1, 0.7, 0.01).name('cup depth (cm)');
+if (import.meta.env.DEV) fGeo.add(G, 'cupDepth', 0.1, 0.7, 0.01).name('cup depth (cm)'); // local tuning only, never on the live site
 fGeo.add(G, 'channelW', 0.8, 1.6, 0.05).name('channel half-width (cm)');
 for (const f of [fPill, fCon, fSol, fGeo]) f.onFinishChange(() => { applyParams(); gui.controllersRecursive().forEach((c) => c.updateDisplay()); });
 fCon.close(); fSol.close(); fGeo.close();
