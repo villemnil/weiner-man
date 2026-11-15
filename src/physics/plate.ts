@@ -2,7 +2,7 @@
 //   +y is the plate normal, bowl floor is y = 0, the bowl centre / cup is the origin,
 //   the tail (start pad) points toward +z.
 // Dimensions are taken from photos of the real tray, using the 3.2 x 1.4 cm pill as the ruler:
-// about 14 cm tip to far rim, round part just under 10 cm across.
+// about 14 cm tip to far rim, round part just under 10 cm across, then scaled up 10% for play.
 // The solid is a union of three "features", each with its own signed distance so a
 // sphere sitting in a corner gets one contact per feature:
 //   0 floor   : half-space y < 0 with the spherical centre cup carved out
@@ -37,24 +37,24 @@ export interface PlateGeom {
 
 export const defaultGeom = (): PlateGeom => ({
   mode: 'plate',
-  bowlR: 4.3,
-  flangeW: 0.35,
+  bowlR: 4.73,
+  flangeW: 0.385,
   depth: 0.8,
   lipH: 0,
-  lipT: 0.25,
-  tailZ: 8.0,
-  tailR: 0.9,
-  padR: 0.8,
-  channelW: 0.85,
-  channelLen: 5.2,
+  lipT: 0.275,
+  tailZ: 8.8,
+  tailR: 0.99,
+  padR: 0.88,
+  channelW: 0.935,
+  channelLen: 5.72,
   cupR: 0.85,
   cupDepth: 0.45,
   toothMid: -85,
   toothSpan: 27,
   toothPeak: 9,
-  toothHeight: 0.42,
-  toothRound: 0.15,
-  chordDist: 3.4,
+  toothHeight: 0.46,
+  toothRound: 0.165,
+  chordDist: 3.74,
   chordAngle: -12,
 });
 
@@ -65,7 +65,7 @@ export interface Hit {
 
 export const FEATURE_COUNT = 3;
 /** Horizontal width of the sloped bowl wall as drawn (the physics wall is vertical at its top edge). */
-const WALL_SLOPE = 0.6;
+const WALL_SLOPE = 0.66;
 
 type P2 = [number, number];
 

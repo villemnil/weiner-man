@@ -9,7 +9,7 @@ export class TiltInput {
 
   constructor(private el: HTMLElement) {
     addEventListener('keydown', (e) => {
-      if (e.target instanceof HTMLInputElement) return;
+      if (e.target instanceof HTMLInputElement || (e.target instanceof Element && e.target.closest('jelly-input'))) return;
       this.keys.add(e.code);
       if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
     });

@@ -4,6 +4,7 @@ import { defaultGeom } from './physics/plate';
 import { View } from './render/scene';
 import { TiltInput } from './input';
 import { chime, clack, sound, unlockAudio } from './sound';
+import { MAX_NAME, Score, formatTime, savedName, submitScore, topScores } from './scores';
 
 const app = document.getElementById('app')!;
 const sim = new Sim();
@@ -11,11 +12,19 @@ const view = new View(app, sim);
 const input = new TiltInput(view.renderer.domElement);
 
 // ---------- UI ----------
+// All UI lives inside one Jelly UI theme (https://jelly-ui.com): soft, squishy web components.
+const uiRoot = document.createElement('jelly-theme');
+uiRoot.setAttribute('mode', 'light');
+uiRoot.setAttribute('accent', '#f4b81f');
+document.body.appendChild(uiRoot);
+/** True when a key event comes from a text field (native or a jelly-input's inner one). */
+const isTyping = (e: Event): boolean =>
+  e.target instanceof HTMLInputElement || (e.target instanceof Element && !!e.target.closest('jelly-input'));
 const el = (html: string): HTMLElement => {
   const d = document.createElement('div');
   d.innerHTML = html.trim();
   const n = d.firstElementChild as HTMLElement;
-  document.body.appendChild(n);
+  uiRoot.appendChild(n);
   return n;
 };
 el(`<div id="vignette"></div>`);
@@ -26,24 +35,42 @@ const squiggle = `<svg class="squiggle" viewBox="0 0 220 14" aria-hidden="true">
 const menu = el(`<div id="menu" class="on">
   <h1 aria-label="Weiner Man">${letters('Weiner Man')}</h1>${squiggle}
   <p>a wobbly little tilting toy</p>
-  <button class="big" id="start">Start</button></div>`);
+  <jelly-button id="start" size="large">Start</jelly-button>
+  <jelly-button id="menuScores" size="small" variant="white">Best times</jelly-button></div>`);
 const hintEl = el(`<div id="hint">Get the Weiner Man to stand<br>in the middle of the plate</div>`);
 const touch = matchMedia('(pointer: coarse)').matches;
 const controlsEl = el(touch
   ? `<div id="controls"><span>drag anywhere to tilt the plate</span></div>`
   : `<div id="controls">
-  <span><kbd>drag</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> tilt the plate</span>
-  <span><kbd>R</kbd> start over</span></div>`);
-const menuBtn = el(`<button id="back" class="ghost" aria-label="Back to menu">&larr; Menu</button>`);
+  <span><jelly-kbd size="small">drag</jelly-kbd> or <jelly-kbd size="small" key="w">W</jelly-kbd><jelly-kbd size="small" key="a">A</jelly-kbd><jelly-kbd size="small" key="s">S</jelly-kbd><jelly-kbd size="small" key="d">D</jelly-kbd> tilt the plate</span>
+  <span><jelly-kbd size="small" key="r">R</jelly-kbd> start over</span></div>`);
+const menuBtn = el(`<jelly-button id="back" size="small" variant="white" label="Back to menu">&larr; Menu</jelly-button>`);
 const tools = el(`<div id="tools">
-  <button class="ghost" id="xray" aria-pressed="false" title="See the steel ball inside">X-ray</button>
-  <button class="ghost" id="again" aria-label="Start over" title="Start over">&#8634;</button></div>`);
-const xrayBtn = document.getElementById('xray')!;
+  <jelly-chip id="xray" selectable size="large" variant="azure" title="See the steel ball inside">X-ray</jelly-chip>
+  <jelly-icon-button id="again" shape="circle" size="small" variant="white" label="Start over" title="Start over">&#8634;</jelly-icon-button></div>`);
+const xrayBtn = document.getElementById('xray') as HTMLElement & { selected: boolean };
+const timerEl = el(`<div id="timer">0.0</div>`);
 const stats = el(`<div id="stats"></div>`);
 const toast = el(`<div id="toast"></div>`);
-const win = el(`<div id="win"><div class="top"><h2>You did it!</h2>${squiggle}<p>Weiner is up</p></div>
-  <div class="bottom"><button class="big">Play again</button><button class="ghost" id="winMenu">&larr; Menu</button></div></div>`);
-const gyroBtn = el(`<button id="gyro" class="ghost">Tilt with your phone</button>`);
+const win = el(`<div id="win"><div class="top"><h2>You did it!</h2>${squiggle}
+    <div id="winTime"></div><p>Weiner is up</p></div>
+  <div class="bottom">
+    <form id="scoreForm" autocomplete="off">
+      <jelly-input id="nameIn" size="small" placeholder="your name" label="Your name" no-autofill></jelly-input>
+      <jelly-button type="submit" size="small" variant="white">Save time</jelly-button></form>
+    <div id="saved"></div>
+    <jelly-button id="playAgain" size="large">Play again</jelly-button>
+    <div class="row"><jelly-button id="winScores" size="small" variant="white">Best times</jelly-button><jelly-button id="winMenu" size="small" variant="white">&larr; Menu</jelly-button></div>
+  </div></div>`);
+const board = el(`<div id="board"><jelly-card class="card"><h3>Best times</h3>${squiggle}
+  <ol id="boardList"></ol><p id="boardNote"></p><jelly-button id="boardClose" size="small">Close</jelly-button></jelly-card></div>`);
+const scoreForm = document.getElementById('scoreForm') as HTMLFormElement;
+const nameIn = document.getElementById('nameIn') as HTMLElement & { value: string };
+// jelly-input has no maxlength: trim as they type, and let Enter save
+nameIn.addEventListener('input', () => { if (nameIn.value.length > MAX_NAME) nameIn.value = nameIn.value.slice(0, MAX_NAME); });
+nameIn.addEventListener('keydown', (e) => { if ((e as KeyboardEvent).key === 'Enter') { e.preventDefault(); scoreForm.requestSubmit(); } });
+const savedEl = document.getElementById('saved')!;
+const gyroBtn = el(`<jelly-button id="gyro" size="small" variant="white">Tilt with your phone</jelly-button>`);
 let toastTimer = 0;
 const showToast = (msg: string): void => {
   toast.textContent = msg;
@@ -76,8 +103,10 @@ let respawnAt = 0;
 let mode: 'menu' | 'play' = 'menu';
 let hintStart = 0; // performance time the tutorial started, 0 = not showing
 let tuning = false;
+let runClean = true; // false once the tuning panel has been open during a run: no score for that one
+let finalMs = 0;
 
-const CAM_PLAY: [[number, number, number], [number, number, number]] = [[0, 26, 23], [0, 0, 2.1]];
+const CAM_PLAY: [[number, number, number], [number, number, number]] = [[0, 28, 24.8], [0, 0, 2.3]];
 const CAM_MENU: [[number, number, number], [number, number, number]] = [[0, 16, 27], [0, 0, -5]];
 
 function restart(scene: SceneName = ui.scene): void {
@@ -87,8 +116,50 @@ function restart(scene: SceneName = ui.scene): void {
   winShown = false;
   win.classList.remove('on');
   respawnAt = 0;
+  runClean = !tuning;
   view.pop();
 }
+
+/** Show the scoreboard, optionally marking the run that was just saved. */
+async function showBoard(mine?: Score): Promise<void> {
+  const list = document.getElementById('boardList')!, note = document.getElementById('boardNote')!;
+  list.replaceChildren();
+  note.textContent = 'Loading…';
+  board.classList.add('on');
+  const { scores, shared } = await topScores(10);
+  let marked = false;
+  for (const sc of scores) {
+    const li = document.createElement('li');
+    const n = document.createElement('span'), t = document.createElement('b');
+    n.textContent = sc.name;
+    t.textContent = formatTime(sc.ms);
+    li.append(n, t);
+    if (mine && !marked && sc.name === mine.name && sc.ms === mine.ms) { li.classList.add('me'); marked = true; }
+    list.appendChild(li);
+  }
+  note.textContent = scores.length === 0 ? 'No times yet. Be the first!' : shared ? '' : 'Times saved on this device.';
+}
+function onWin(): void {
+  finalMs = Math.max(0, sim.time - 1) * 1000; // the moment he got in, not the end of the 1 s hold
+  document.getElementById('winTime')!.textContent = formatTime(finalMs);
+  const scored = runClean && sim.scene === 'game';
+  scoreForm.style.display = scored ? '' : 'none';
+  savedEl.textContent = scored ? '' : 'Practice run: no time saved.';
+  nameIn.value = savedName();
+  win.classList.add('on');
+  confetti();
+  chime();
+}
+scoreForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = nameIn.value;
+  scoreForm.style.display = 'none';
+  (document.activeElement as HTMLElement | null)?.blur();
+  savedEl.textContent = 'Saving…';
+  const { shared } = await submitScore(name, finalMs);
+  savedEl.textContent = shared ? 'Saved to the scoreboard!' : 'Saved!';
+  void showBoard({ name: savedName(), ms: Math.round(finalMs) });
+});
 
 /** Win celebration: a burst of paper confetti in the toy's colours. */
 function confetti(): void {
@@ -159,14 +230,17 @@ function goMenu(): void {
   setTuning(false);
   menu.classList.add('on');
   for (const e of [controlsEl, menuBtn, tools, gyroBtn]) e.classList.remove('on');
+  board.classList.remove('on');
+  setXray(false);
   restart('attract');
   view.glideTo(...CAM_MENU);
 }
 function setXray(on: boolean): void {
   ui.xray = on;
   view.setXray(on);
-  xrayBtn.classList.toggle('active', on);
-  xrayBtn.setAttribute('aria-pressed', String(on));
+  if (xrayBtn.selected !== on) xrayBtn.selected = on;
+  uiRoot.setAttribute('mode', on ? 'dark' : 'light'); // the whole UI goes dark with the radiograph
+  document.body.classList.toggle('xray', on);
 }
 function setTuning(on: boolean): void {
   tuning = on;
@@ -175,10 +249,14 @@ function setTuning(on: boolean): void {
 }
 document.getElementById('start')!.addEventListener('click', startGame);
 menuBtn.addEventListener('click', goMenu);
-xrayBtn.addEventListener('click', () => setXray(!ui.xray));
+xrayBtn.addEventListener('change', () => setXray(!!xrayBtn.selected));
 document.getElementById('again')!.addEventListener('click', () => { restart(); (document.activeElement as HTMLElement | null)?.blur(); });
 document.getElementById('winMenu')!.addEventListener('click', goMenu);
-win.querySelector('button')!.addEventListener('click', () => { restart('game'); hintStart = performance.now(); });
+document.getElementById('playAgain')!.addEventListener('click', () => { restart('game'); hintStart = performance.now(); });
+document.getElementById('winScores')!.addEventListener('click', () => void showBoard());
+document.getElementById('menuScores')!.addEventListener('click', () => void showBoard());
+document.getElementById('boardClose')!.addEventListener('click', () => board.classList.remove('on'));
+board.addEventListener('click', (e) => { if (e.target === board) board.classList.remove('on'); });
 
 // ---------- GUI ----------
 const gui = new GUI({ title: 'Tuning' });
@@ -243,7 +321,8 @@ view.glideTo(...CAM_MENU, true);
 // ---------- input ----------
 addEventListener('keydown', (e) => {
   unlockAudio();
-  if (e.target instanceof HTMLInputElement) return;
+  if (isTyping(e)) return;
+  if (board.classList.contains('on')) { if (e.code === 'Escape' || e.code === 'Enter') board.classList.remove('on'); return; }
   if (mode === 'menu') { if (e.code === 'Enter' || e.code === 'Space') startGame(); return; }
   if (e.code === 'Escape') goMenu();
   else if (e.code === 'KeyT') setTuning(!tuning);
@@ -305,7 +384,11 @@ function frame(now: number): void {
   if (sim.scene === 'slope8' && sim.shell.x[2] > 34) restart();
   if (sim.fellOff && !respawnAt) { respawnAt = now + 700; showToast('Whoops, off the plate!'); }
   if (respawnAt && now > respawnAt) { respawnAt = 0; sim.respawn(); view.pop(); }
-  if (sim.won && !winShown) { winShown = true; win.classList.add('on'); confetti(); chime(); }
+  if (sim.won && !winShown) { winShown = true; onWin(); }
+  if (tuning) runClean = false;
+  const timed = mode === 'play' && sim.scene === 'game';
+  timerEl.classList.toggle('on', timed);
+  if (timed && !sim.won) timerEl.textContent = formatTime(sim.time * 1000).replace(' s', '');
 
   // tutorial: ring the centre hole and say what to do, for the first few seconds of a round
   let hint = 0;

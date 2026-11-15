@@ -280,7 +280,7 @@ export class Sim {
         this.placeAtStart();
         break;
       case 'flat':
-        this.placePill([1.8, floorY + R + 0.01, -1.5], [1, 0, 0.15], 0);
+        this.placePill([2.0, floorY + R + 0.01, -1.6], [1, 0, 0.15], 0);
         break;
       case 'attract':
         // title screen: the pill wanders an open floor, steered from outside via targetLean

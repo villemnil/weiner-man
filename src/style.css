@@ -34,40 +34,64 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--brown)
   background: linear-gradient(rgba(59,42,32,.55), rgba(59,42,32,0) 30%, rgba(59,42,32,0) 68%, rgba(59,42,32,.5)); }
 #win .top, #win .bottom { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 #win p { margin-bottom: 0; }
-body:has(#win.on) #back, body:has(#win.on) #tools, body:has(#win.on) #controls, body:has(#win.on) #gyro { opacity: 0; pointer-events: none; }
+body:has(#win.on) #timer, body:has(#win.on) #back, body:has(#win.on) #tools, body:has(#win.on) #controls, body:has(#win.on) #gyro { opacity: 0; pointer-events: none; }
 @keyframes wobble { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg) translateY(-3px); } }
 
-button.big { font: 600 22px var(--font); letter-spacing: .5px; padding: 13px 44px 14px; border: 0; border-radius: 999px;
-  background: var(--yellow); color: var(--brown); cursor: pointer; box-shadow: 0 6px 0 var(--yellow-deep), 0 14px 24px rgba(0,0,0,.28);
-  transition: transform .12s ease, box-shadow .12s ease, background .12s ease; }
-button.big:hover { background: #ffc93a; transform: translateY(-2px) rotate(-2deg); box-shadow: 0 8px 0 var(--yellow-deep), 0 18px 26px rgba(0,0,0,.28); }
-button.big:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--yellow-deep), 0 6px 12px rgba(0,0,0,.28); }
-button.big.small { font-size: 15px; padding: 9px 20px 10px; box-shadow: 0 4px 0 var(--yellow-deep), 0 8px 14px rgba(0,0,0,.25); }
-
-button.ghost { font: 500 16px var(--font); padding: 7px 16px 8px; border: 0; border-radius: 999px; cursor: pointer;
-  color: var(--cream); background: rgba(59,42,32,.45); box-shadow: inset 0 0 0 2px rgba(255,246,229,.55);
-  transition: transform .12s ease, background .12s ease; }
-button.ghost:hover { background: rgba(59,42,32,.7); transform: rotate(-2deg); }
-button.ghost:active { transform: translateY(2px); }
-button { touch-action: manipulation; }
-button.ghost.active { background: var(--cream); color: var(--brown); box-shadow: 0 3px 0 rgba(0,0,0,.25); }
+/* ---- buttons (Jelly UI components; this is only their position) ---- */
 #back, #tools, #gyro { position: fixed; opacity: 0; pointer-events: none; transition: opacity .4s ease; }
-#back { left: max(18px, env(safe-area-inset-left)); top: max(16px, env(safe-area-inset-top)); }
-#tools { right: max(18px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top)); display: flex; gap: 10px; }
-#again { font-size: 20px; line-height: 1; padding: 6px 13px 8px; }
+#back { left: max(18px, env(safe-area-inset-left)); top: max(14px, env(safe-area-inset-top)); }
+#tools { right: max(18px, env(safe-area-inset-right)); top: max(14px, env(safe-area-inset-top)); display: flex; gap: 10px; align-items: center; }
 #gyro { right: max(18px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); display: none; }
 #gyro.has { display: block; }
 #back.on, #tools.on, #gyro.on { opacity: 1; pointer-events: auto; }
-#winMenu { margin-top: 18px; }
+#menu jelly-button, #win jelly-button, #board jelly-button, #tools > *, #back, #gyro { font-family: var(--font); font-weight: 600; touch-action: manipulation; }
+/* plain fallback if the Jelly UI script has not loaded (offline, blocked): still clickable */
+:is(jelly-button, jelly-icon-button, jelly-chip):not(:defined) { display: inline-block; padding: 10px 22px; border-radius: 999px;
+  background: var(--yellow); color: var(--brown); font: 600 17px var(--font); cursor: pointer; }
+jelly-input:not(:defined) { display: none; }
+jelly-kbd:not(:defined) { display: inline-block; padding: 1px 7px; margin-right: 3px; border-radius: 8px; background: var(--cream); color: var(--brown); }
+
+/* ---- timer, score entry, scoreboard ---- */
+#timer { position: fixed; left: 0; right: 0; top: max(16px, env(safe-area-inset-top)); text-align: center; pointer-events: none;
+  font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: .5px; opacity: 0; transition: opacity .4s ease;
+  text-shadow: 0 3px 0 rgba(0,0,0,.2), 0 0 18px rgba(59,42,32,.7); }
+#timer.on { opacity: 1; }
+#winTime { font-size: clamp(30px, 5vw, 46px); font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 6px;
+  text-shadow: 0 3px 0 rgba(0,0,0,.2); }
+#win .bottom { gap: 12px; }
+#win .row { display: flex; gap: 10px; }
+#scoreForm { display: flex; gap: 8px; align-items: center; }
+#nameIn { width: 190px; }
+#saved { min-height: 20px; font-size: 15px; opacity: .9; text-shadow: 0 1px 4px rgba(0,0,0,.55); }
+#menuScores { margin-top: 16px; }
+#menu jelly-button, #win jelly-button { flex: none; }
+#board { position: fixed; inset: 0; z-index: 6; display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: rgba(30,18,10,.55); opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+#board.on { opacity: 1; pointer-events: auto; }
+#board .card { display: block; width: min(340px, 100%); box-sizing: border-box; --jelly-radius: 28px; text-align: center; transform: rotate(-1deg);
+  font-family: var(--font); color: var(--brown); }
+#board h3 { margin: 0; font-size: 28px; font-weight: 600; }
+#board .squiggle { width: 130px; margin: 2px auto 8px; display: block; }
+#board ol { list-style: none; counter-reset: rank; margin: 0 0 6px; padding: 0; text-align: left; }
+#board li { counter-increment: rank; display: flex; align-items: baseline; gap: 10px; padding: 7px 10px; border-radius: 12px; font-size: 17px; }
+#board li::before { content: counter(rank); width: 20px; font-weight: 600; opacity: .45; text-align: right; }
+#board li span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#board li b { font-weight: 600; font-variant-numeric: tabular-nums; }
+#board li:first-child b { color: #c2478a; }
+#board li.me { background: var(--yellow); }
+#board p { margin: 4px 0 12px; font-size: 14px; opacity: .65; min-height: 18px; }
+
+/* ---- x-ray mode ---- */
+body.xray #vignette { background: radial-gradient(ellipse at 50% 45%, rgba(0,10,20,0) 45%, rgba(0,6,14,.75) 100%); }
+body.xray #hint, body.xray #timer, body.xray #controls { color: #d9f6ff; text-shadow: 0 0 14px rgba(90,200,255,.55); }
 
 /* ---- in-game ---- */
-#hint { position: fixed; left: 0; right: 0; top: 7vh; text-align: center; font-size: clamp(22px, 3.4vw, 36px); font-weight: 500;
+#hint { position: fixed; left: 0; right: 0; top: calc(max(16px, env(safe-area-inset-top)) + 56px); text-align: center; font-size: clamp(22px, 3.4vw, 36px); font-weight: 500;
   line-height: 1.25; opacity: 0; pointer-events: none; text-shadow: 0 3px 0 rgba(0,0,0,.2), 0 0 24px rgba(59,42,32,.7); }
 #controls { position: fixed; left: max(18px, env(safe-area-inset-left)); bottom: max(16px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; font-size: 15px;
   opacity: 0; pointer-events: none; transition: opacity .5s ease .4s; text-shadow: 0 1px 4px rgba(0,0,0,.55); }
 #controls.on { opacity: .9; }
-kbd { display: inline-block; min-width: 12px; margin-right: 3px; padding: 1px 7px 2px; border-radius: 8px; text-align: center;
-  font: 500 13px var(--font); color: var(--brown); background: var(--cream); box-shadow: 0 2px 0 rgba(0,0,0,.28); }
+jelly-kbd { margin-right: 3px; vertical-align: middle; }
 #toast { position: fixed; left: 50%; top: 20%; transform: translateX(-50%) rotate(-2deg); padding: 9px 20px 10px; border-radius: 999px;
   background: var(--cream); color: var(--brown); font-size: 17px; font-weight: 500; opacity: 0; transition: opacity .2s; pointer-events: none;
   box-shadow: 0 4px 0 rgba(0,0,0,.2); }
@@ -81,11 +105,8 @@ kbd { display: inline-block; min-width: 12px; margin-right: 3px; padding: 1px 7p
 .lil-gui.autoPlace { top: 64px; right: 12px; }
 /* phones and tablets: bigger tap targets, tighter text */
 @media (pointer: coarse) {
-  button.ghost { font-size: 17px; padding: 10px 18px 11px; min-height: 44px; }
-  #again { font-size: 22px; padding: 8px 15px 10px; }
   #controls { font-size: 15px; opacity: 0; }
   #controls.on { opacity: .85; }
-  button.big { padding: 15px 52px 16px; }
   /* bottom of the screen: tilt button centred, the one-line hint under it */
   #controls { left: 0; right: 0; align-items: center; text-align: center; }
   #gyro { left: 0; right: 0; width: fit-content; margin: 0 auto; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 34px); }
@@ -98,7 +119,7 @@ kbd { display: inline-block; min-width: 12px; margin-right: 3px; padding: 1px 7p
 }
 /* short landscape phones: keep the goal text out of the plate's way */
 @media (max-height: 480px) {
-  #hint { top: 10px; font-size: 18px; }
+  #hint { top: 50px; font-size: 18px; }
   #hint br { display: none; }
   #menu { padding-bottom: 18vh; gap: 2px; }
   #menu h1 { font-size: 48px; }

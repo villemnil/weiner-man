@@ -4,8 +4,11 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { Sim } from '../physics/sim';
 import { buildPlateGeometry, buildDecals } from './plateMesh';
 import faceUrl from '../assets/weiner.svg';
+import { XRAY_BG, skullTexture, xrayBallMaterial, xrayPlateMaterial, xrayShellMaterial } from './xray';
 
 const GROUND_Y = -6;
+const FACE_U_OFFSET = 0.175;
+const NORMAL_BG = '#3b2a20';
 const PINK = new THREE.Color('#ff7ab8');
 
 function carpetTexture(): THREE.Texture {
@@ -46,7 +49,7 @@ function faceTexture(): THREE.Texture {
   x.fillRect(0, 253, 1024, 5); // seam
   const t = new THREE.CanvasTexture(c);
   t.wrapS = THREE.RepeatWrapping;
-  t.offset.x = 0.175; // puts the face on the side that looks up at the start
+  t.offset.x = FACE_U_OFFSET; // puts the face on the side that looks up at the start
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 8;
   // The face artwork (src/assets/weiner.svg), on the upper half. The canvas is stretched
@@ -88,6 +91,10 @@ export class View {
   ball!: THREE.Mesh;
   plateMat: THREE.MeshPhysicalMaterial;
   shellMat: THREE.MeshPhysicalMaterial;
+  private ballMat: THREE.MeshStandardMaterial;
+  private xPlateMat = xrayPlateMaterial();
+  private xBallMat = xrayBallMaterial();
+  private xShellMat = xrayShellMaterial(skullTexture(), FACE_U_OFFSET);
   xray = false;
   private lite = false;
   private builtKey = '';
@@ -121,7 +128,7 @@ export class View {
     this.scene.fog = new THREE.Fog('#3b2a20', 90, 220);
 
     this.camera = new THREE.PerspectiveCamera(34, 1, 1, 400);
-    this.camera.position.set(0, 26, 23);
+    this.camera.position.set(0, 28, 24.8);
     this.controls = new OrbitControls(this.camera, r.domElement);
     this.controls.target.set(0, 0, 2.1);
     this.controls.saveState();
@@ -163,7 +170,7 @@ export class View {
 
     // tutorial marker: a soft pulsing ring around the centre hole
     this.ring = new THREE.Mesh(
-      new THREE.RingGeometry(1.22, 1.4, 72),
+      new THREE.RingGeometry(1.26, 1.45, 72),
       new THREE.MeshBasicMaterial({ color: '#fff6e5', transparent: true, opacity: 0, depthWrite: false, toneMapped: false }),
     );
     this.ring.rotation.x = -Math.PI / 2;
@@ -175,6 +182,7 @@ export class View {
     this.plateMat = new THREE.MeshPhysicalMaterial({
       color: '#eea200', roughness: 0.38, clearcoat: 0.45, clearcoatRoughness: 0.25, side: THREE.DoubleSide,
     });
+    this.ballMat = new THREE.MeshStandardMaterial({ map: ballTexture(), metalness: 0.95, roughness: 0.22 });
     this.shellMat = new THREE.MeshPhysicalMaterial({
       map: faceTexture(), roughness: 0.25, clearcoat: 0.7, clearcoatRoughness: 0.15,
     });
@@ -227,10 +235,7 @@ export class View {
     this.pill.castShadow = true;
     this.pill.renderOrder = 2;
     this.scene.add(this.pill);
-    this.ball = new THREE.Mesh(
-      new THREE.SphereGeometry(p.ballRadius, 32, 20),
-      new THREE.MeshStandardMaterial({ map: ballTexture(), metalness: 0.95, roughness: 0.22 }),
-    );
+    this.ball = new THREE.Mesh(new THREE.SphereGeometry(p.ballRadius, 32, 20), this.ballMat);
     this.ball.renderOrder = 1;
     this.scene.add(this.ball);
     this.setXray(this.xray);
@@ -238,11 +243,18 @@ export class View {
 
   setXray(on: boolean): void {
     this.xray = on;
-    this.shellMat.transparent = on;
-    this.shellMat.opacity = on ? 0.32 : 1;
-    this.shellMat.depthWrite = !on;
-    this.shellMat.needsUpdate = true;
+    const board = this.sim.plate.g.mode === 'plane';
+    const plate = on ? this.xPlateMat : board ? this.boardMat : this.plateMat;
+    this.plateMesh.material = plate;
+    this.decals?.traverse((o) => { if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).material = on ? this.xPlateMat : this.plateMat; });
+    this.pill.material = on ? this.xShellMat : this.shellMat;
+    this.ball.material = on ? this.xBallMat : this.ballMat;
     this.ball.visible = on;
+    // a radiograph has no carpet and no cast shadows
+    this.ground.visible = !on;
+    this.plateMesh.castShadow = !on;
+    this.pill.castShadow = !on;
+    (this.scene.background as THREE.Color).set(on ? XRAY_BG : NORMAL_BG);
   }
 
   resize(): void {
