@@ -382,7 +382,11 @@ function frame(now: number): void {
 
   // the slope board is finite: loop the run
   if (sim.scene === 'slope8' && sim.shell.x[2] > 34) restart();
-  if (sim.fellOff && !respawnAt) { respawnAt = now + 700; showToast('Whoops, off the plate!'); }
+  if (mode === 'menu') {
+    // title screen: if he ever strays too far (e.g. the tab was throttled), quietly bring him back
+    const far = Math.hypot(sim.shell.x[0], sim.shell.x[2]) > 45;
+    if (sim.fellOff || far) restart('attract');
+  } else if (sim.fellOff && !respawnAt) { respawnAt = now + 700; showToast('Whoops, off the plate!'); }
   if (respawnAt && now > respawnAt) { respawnAt = 0; sim.respawn(); view.pop(); }
   if (sim.won && !winShown) { winShown = true; onWin(); }
   if (tuning) runClean = false;
