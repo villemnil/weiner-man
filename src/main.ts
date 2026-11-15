@@ -42,8 +42,8 @@ const touch = matchMedia('(pointer: coarse)').matches;
 const controlsEl = el(touch
   ? `<div id="controls"><span>drag anywhere to tilt the plate</span></div>`
   : `<div id="controls">
-  <span><jelly-kbd size="small">drag</jelly-kbd> or <jelly-kbd size="small" key="w">W</jelly-kbd><jelly-kbd size="small" key="a">A</jelly-kbd><jelly-kbd size="small" key="s">S</jelly-kbd><jelly-kbd size="small" key="d">D</jelly-kbd> tilt the plate</span>
-  <span><jelly-kbd size="small" key="r">R</jelly-kbd> start over</span></div>`);
+  <span><kbd>drag</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> tilt the plate</span>
+  <span><kbd>R</kbd> start over</span></div>`);
 const menuBtn = el(`<jelly-button id="back" size="small" variant="white" label="Back to menu">&larr; Menu</jelly-button>`);
 const tools = el(`<div id="tools">
   <jelly-chip id="xray" selectable size="large" variant="azure" title="See the steel ball inside">X-ray</jelly-chip>
@@ -161,23 +161,21 @@ scoreForm.addEventListener('submit', async (e) => {
   void showBoard({ name: savedName(), ms: Math.round(finalMs) });
 });
 
-/** Win celebration: a burst of paper confetti in the toy's colours. */
+/** Win celebration: a burst of little pink sausages, the same pink as the Wiener Man. */
 function confetti(): void {
-  const cols = ['#f4b81f', '#f27fb4', '#fff6e5', '#9ad9c5', '#ee5c9f'];
   const k = Math.max(0.8, Math.min(2.2, Math.min(innerWidth, innerHeight) / 620)); // scale with the screen
-  for (let i = 0; i < 54; i++) {
+  for (let i = 0; i < 46; i++) {
     const p = document.createElement('i');
     const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, sp = (160 + Math.random() * 300) * k;
-    const dx = Math.cos(a) * sp, up = Math.sin(a) * sp, spin = (Math.random() - 0.5) * 900;
-    p.style.background = cols[i % cols.length];
-    p.style.width = `${(7 + Math.random() * 7) * k}px`;
-    p.style.height = `${(10 + Math.random() * 9) * k}px`;
-    if (i % 3 === 0) p.style.borderRadius = '50%';
+    const dx = Math.cos(a) * sp, up = Math.sin(a) * sp, spin = (Math.random() - 0.5) * 1100;
+    const w = (8 + Math.random() * 6) * k, r0 = Math.random() * 360;
+    p.style.width = `${w}px`;
+    p.style.height = `${w * (2.1 + Math.random() * 0.5)}px`;
     confettiBox.appendChild(p);
     p.animate([
-      { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
-      { transform: `translate(${dx}px, ${up}px) rotate(${spin * 0.5}deg)`, opacity: 1, offset: 0.3, easing: 'ease-in' },
-      { transform: `translate(${dx * 1.5}px, ${up + 620 * k}px) rotate(${spin}deg)`, opacity: 0 },
+      { transform: `translate(0, 0) rotate(${r0}deg)`, opacity: 1 },
+      { transform: `translate(${dx}px, ${up}px) rotate(${r0 + spin * 0.5}deg)`, opacity: 1, offset: 0.3, easing: 'ease-in' },
+      { transform: `translate(${dx * 1.5}px, ${up + 620 * k}px) rotate(${r0 + spin}deg)`, opacity: 0 },
     ], { duration: 1500 + Math.random() * 900, easing: 'cubic-bezier(.15,.7,.3,1)' }).onfinish = () => p.remove();
   }
 }
