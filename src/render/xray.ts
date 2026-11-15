@@ -1,6 +1,7 @@
 // X-ray look: everything turns into a glowing blue radiograph. Edges and steep surfaces
 // glow, flat surfaces stay dark, the steel ball is the brightest thing in the picture.
 import * as THREE from 'three';
+import skullSvg from '../assets/skeleton.svg?raw';
 
 export const XRAY_BG = '#020a12';
 
@@ -68,50 +69,50 @@ export function xrayBallMaterial(): THREE.ShaderMaterial {
   });
 }
 
+export type EyeStyle = 'stroke' | 'fill' | 'both';
+
 /**
- * A friendly skull where the face is: round sockets with little pupils, a heart-shaped nose
- * and a toothy grin. Same canvas layout as the face texture (233 px/cm around, 128 px/cm along).
+ * The skull face (src/assets/skeleton.svg) where the normal face is, tinted the radiograph's
+ * pale blue with a soft glow. Same canvas layout as the face texture (233 px/cm around the
+ * pill, 128 px/cm along it). `eyes` picks how the two big sockets are drawn:
+ *   'stroke' - outlined sockets with only a faint tint inside
+ *   'fill'   - solid shapes, no outline      'both' - the artwork as drawn (solid + outline)
  */
-export function skullTexture(): THREE.Texture {
+export function skullTexture(eyes: EyeStyle = 'stroke'): THREE.Texture {
   const c = document.createElement('canvas');
   c.width = 1024; c.height = 512;
   const x = c.getContext('2d')!;
-  x.translate(512, 172);
-  x.scale(233, 128); // draw in cm from here on
-  x.lineCap = 'round'; x.lineJoin = 'round';
-  x.strokeStyle = '#dff8ff'; x.fillStyle = '#dff8ff';
-  x.shadowColor = '#7fdcff'; x.shadowBlur = 10;
-  for (const s of [-1, 1]) {
-    // socket
-    x.lineWidth = 0.028;
-    x.beginPath(); x.ellipse(s * 0.17, -0.07, 0.125, 0.16, s * 0.12, 0, Math.PI * 2);
-    x.globalAlpha = 0.16; x.fill();
-    x.globalAlpha = 1; x.stroke();
-    // friendly pupil, looking slightly inward
-    x.beginPath(); x.arc(s * 0.15, -0.04, 0.042, 0, Math.PI * 2); x.fill();
-  }
-  // nose: a little upside-down heart
-  x.beginPath();
-  x.moveTo(0, 0.1);
-  x.bezierCurveTo(0.07, 0.17, 0.06, 0.24, 0, 0.2);
-  x.bezierCurveTo(-0.06, 0.24, -0.07, 0.17, 0, 0.1);
-  x.fill();
-  // grin: two arcs with teeth between them
-  x.lineWidth = 0.024;
-  const top = (u: number): number => 0.31 + 0.06 * (1 - u * u), bot = (u: number): number => 0.39 + 0.1 * (1 - u * u);
-  for (const f of [top, bot]) {
-    x.beginPath();
-    for (let i = 0; i <= 20; i++) { const u = -1 + i / 10; if (i === 0) x.moveTo(u * 0.25, f(u)); else x.lineTo(u * 0.25, f(u)); }
-    x.stroke();
-  }
-  x.lineWidth = 0.02;
-  for (let i = -3; i <= 3; i++) {
-    const u = i / 3;
-    x.beginPath(); x.moveTo(u * 0.25, top(u)); x.lineTo(u * 0.25, bot(u)); x.stroke();
-  }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = THREE.RepeatWrapping;
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 8;
+
+  let svg = skullSvg;
+  if (eyes === 'stroke') {
+    // the two eye ellipses are the only rx="49.5" shapes: keep their outline, fade the fill
+    svg = svg.replace(/(<ellipse[^>]*rx="49\.5"[^>]*)fill="white"/g, '$1fill="white" fill-opacity="0.13"');
+  } else if (eyes === 'fill') {
+    svg = svg.replace(/(mask="url\(#stroke[01]_[^"]*\)")/g, '$1 stroke-opacity="0"');
+  }
+  const img = new Image();
+  img.onload = () => {
+    // Same width and top edge as the normal face, so the features sit where his face was.
+    const w = 0.78 * 233, h = ((0.78 * img.naturalHeight) / img.naturalWidth) * 128; // whatever the artwork's shape
+    const left = 512 - w / 2, top = 172 - (((0.78 * 322) / 276) * 128) / 2;
+    // tint: draw the white artwork on a scratch canvas and recolour it, then stamp it with a glow
+    const s = document.createElement('canvas');
+    s.width = Math.ceil(w); s.height = Math.ceil(h);
+    const sx = s.getContext('2d')!;
+    sx.drawImage(img, 0, 0, s.width, s.height);
+    sx.globalCompositeOperation = 'source-in';
+    sx.fillStyle = '#dff8ff';
+    sx.fillRect(0, 0, s.width, s.height);
+    x.clearRect(0, 0, c.width, c.height);
+    x.shadowColor = '#7fdcff';
+    x.shadowBlur = 10;
+    x.drawImage(s, left, top);
+    t.needsUpdate = true;
+  };
+  img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   return t;
 }

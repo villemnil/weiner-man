@@ -26,7 +26,8 @@ function saveLocal(s: Score): void {
 
 const headers = (): Record<string, string> => ({
   apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+  // legacy anon keys are JWTs and also go in Authorization; new sb_publishable_ keys only need apikey
+  ...(SUPABASE_ANON_KEY.startsWith('eyJ') ? { Authorization: `Bearer ${SUPABASE_ANON_KEY}` } : {}),
   'Content-Type': 'application/json',
 });
 

@@ -1,0 +1,3 @@
+# Supabase project settings. The GitHub integration reads this folder and applies
+# supabase/migrations/*.sql to the linked project when main is pushed.
+project_id = "wiener-man"

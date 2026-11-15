@@ -4,7 +4,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { Sim } from '../physics/sim';
 import { buildPlateGeometry, buildDecals } from './plateMesh';
 import faceUrl from '../assets/weiner.svg';
-import { XRAY_BG, skullTexture, xrayBallMaterial, xrayPlateMaterial, xrayShellMaterial } from './xray';
+import { EyeStyle, XRAY_BG, skullTexture, xrayBallMaterial, xrayPlateMaterial, xrayShellMaterial } from './xray';
 
 const GROUND_Y = -6;
 const FACE_U_OFFSET = 0.175;
@@ -264,6 +264,12 @@ export class View {
     // keep the whole plate in view on narrow / portrait screens
     this.camera.fov = w / h < 1 ? 34 + (1 - w / h) * 30 : h < 520 ? 27 : 34; // short landscape phones: zoom in
     this.camera.updateProjectionMatrix();
+  }
+
+  /** Swap how the x-ray skull's eye sockets are drawn (for comparing looks). */
+  setSkullEyes(style: EyeStyle): void {
+    (this.xShellMat.uniforms.map.value as THREE.Texture).dispose();
+    this.xShellMat.uniforms.map.value = skullTexture(style);
   }
 
   /** Make the pill pop in (call after placing it). */

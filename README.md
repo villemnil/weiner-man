@@ -20,30 +20,15 @@ npm run dev
 
 `npm test` runs the headless physics tests. Press **T** in the game for the tuning panel.
 
-## Online scoreboard (optional)
+## Online scoreboard
 
-Out of the box, best times are saved on each player's own device. To give everyone one shared
-scoreboard, connect a free [Supabase](https://supabase.com) project:
+Best times are saved on each player's own device until a Supabase key is set in `src/config.ts`.
+The table lives in `supabase/migrations/`; with Supabase's GitHub integration it is applied to the
+linked project when `main` is pushed (or paste that SQL into the project's SQL editor).
 
-1. Create a project, open its **SQL editor**, and run:
-
-   ```sql
-   create table public.scores (
-     id bigint generated always as identity primary key,
-     name text not null check (char_length(name) between 1 and 14),
-     time_ms integer not null check (time_ms between 300 and 3600000),
-     created_at timestamptz not null default now()
-   );
-   alter table public.scores enable row level security;
-   create policy "anyone can read scores" on public.scores for select to anon using (true);
-   create policy "anyone can add a score" on public.scores for insert to anon with check (true);
-   ```
-
-2. Copy the project's **URL** and **anon public key** (Project settings → API) into `src/config.ts`.
-
-The anon key is meant to be public. The policies above only let visitors read scores and add
-new ones; nobody can edit or delete. Times are sent by the browser, so a determined friend could
-fake one. Fine for a game between friends, not for prizes.
+The anon / publishable key is meant to be public. The table's rules only let visitors read
+scores and add new ones; nobody can edit or delete. Times are sent by the browser, so a
+determined friend could fake one. Fine for a game between friends, not for prizes.
 
 ## How it works
 
