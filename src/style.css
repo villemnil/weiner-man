@@ -87,15 +87,13 @@ jelly-input:not(:defined) { display: none; }
   background: linear-gradient(rgba(255,255,255,0), var(--card-bg, #fff)); opacity: 0; transition: opacity .2s; }
 #board.scrolls:not(.atEnd) .scrollBox::after { opacity: 1; }
 /* the scrollbar: a pink Wiener Man riding a thin rail */
-#board .rail { position: absolute; top: 4px; bottom: 10px; right: 2px; width: 14px; display: none; cursor: pointer; touch-action: none; }
+#board .rail { position: absolute; top: 4px; bottom: 10px; right: 3px; width: 10px; display: none; cursor: pointer; touch-action: none; }
 #board.scrolls .rail { display: block; }
-#board .rail::before { content: ''; position: absolute; left: 5px; width: 4px; top: 0; bottom: 0; border-radius: 4px; background: rgba(59,42,32,.12); }
-#board .thumb { position: absolute; left: 0; top: 0; width: 14px; border-radius: 999px; will-change: transform;
+#board .rail::before { content: ''; position: absolute; left: 3.5px; width: 3px; top: 0; bottom: 0; border-radius: 4px; background: rgba(59,42,32,.12); }
+#board .thumb { position: absolute; left: 0; top: 0; width: 10px; border-radius: 999px; will-change: transform;
   background: linear-gradient(90deg, #f98bbd 0 24%, var(--pill) 52%, #d9488c 100%);
   box-shadow: inset 0 -1px 0 rgba(0,0,0,.08); transition: width .15s, left .15s; }
-/* the seam round his middle, like the real capsule */
-#board .thumb::after { content: ''; position: absolute; left: 1px; right: 1px; top: 50%; height: 2px; margin-top: -1px; border-radius: 2px; background: rgba(160,30,90,.35); }
-#board .rail:hover .thumb, #board .rail.held .thumb { width: 18px; left: -2px; }
+#board .rail:hover .thumb, #board .rail.held .thumb { width: 13px; left: -1.5px; }
 #board li { counter-increment: rank; display: flex; align-items: baseline; gap: 10px; padding: 7px 10px; border-radius: 12px; font-size: 17px; }
 #board li::before { content: counter(rank); width: 20px; font-weight: 600; opacity: .45; text-align: right; }
 #board li span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
