@@ -63,7 +63,7 @@ const win = el(`<div id="win"><div class="top"><h2>You did it!</h2>${squiggle}
     <div class="row"><jelly-button id="winScores" size="small" variant="white">Best times</jelly-button><jelly-button id="winMenu" size="small" variant="white">&larr; Menu</jelly-button></div>
   </div></div>`);
 const board = el(`<div id="board"><jelly-card class="card"><h3>Best times</h3>${squiggle}
-  <ol id="boardList"></ol><p id="boardNote"></p><jelly-button id="boardClose" size="small">Close</jelly-button></jelly-card></div>`);
+  <div class="scrollBox"><ol id="boardList"></ol><div class="rail" aria-hidden="true"><i class="thumb"></i></div></div><p id="boardNote"></p><jelly-button id="boardClose" size="small">Close</jelly-button></jelly-card></div>`);
 const scoreForm = document.getElementById('scoreForm') as HTMLFormElement;
 const nameIn = document.getElementById('nameIn') as HTMLElement & { value: string };
 // jelly-input has no maxlength: trim as they type, and let Enter save
@@ -126,7 +126,7 @@ async function showBoard(mine?: Score): Promise<void> {
   list.replaceChildren();
   note.textContent = 'Loading…';
   board.classList.add('on');
-  const { scores, shared } = await topScores(10);
+  const { scores, shared } = await topScores(BOARD_SIZE);
   let marked = false;
   for (const sc of scores) {
     const li = document.createElement('li');
@@ -138,7 +138,49 @@ async function showBoard(mine?: Score): Promise<void> {
     list.appendChild(li);
   }
   note.textContent = scores.length === 0 ? 'No times yet. Be the first!' : shared ? '' : 'Times saved on this device.';
+  list.scrollTop = 0;
+  list.querySelector('li.me')?.scrollIntoView({ block: 'center' });
+  syncRail();
 }
+/** How many times the board shows; the list scrolls inside the card. */
+const BOARD_SIZE = 100;
+/**
+ * The board's scrollbar is drawn by hand so it looks the same everywhere (phones hide native
+ * scrollbars): a little pink Wiener Man on a rail, sized to the visible share of the list, and
+ * draggable.
+ */
+const boardList = document.getElementById('boardList')!;
+const rail = board.querySelector('.rail') as HTMLElement, thumb = rail.querySelector('.thumb') as HTMLElement;
+function syncRail(): void {
+  const { scrollTop: top, scrollHeight: total, clientHeight: view } = boardList;
+  const scrolls = total > view + 2;
+  board.classList.toggle('scrolls', scrolls);
+  board.classList.toggle('atEnd', !scrolls || top + view >= total - 2);
+  if (!scrolls) return;
+  const railH = rail.clientHeight;
+  const h = Math.max(38, (railH * view) / total);
+  thumb.style.height = `${h}px`;
+  thumb.style.transform = `translateY(${((railH - h) * top) / (total - view)}px)`;
+}
+boardList.addEventListener('scroll', syncRail, { passive: true });
+addEventListener('resize', syncRail);
+new ResizeObserver(syncRail).observe(boardList);
+rail.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  const r = rail.getBoundingClientRect(), th = thumb.getBoundingClientRect();
+  // grab the thumb where it was touched; a tap on the rail jumps the thumb's middle there
+  const grab = e.clientY >= th.top && e.clientY <= th.bottom ? e.clientY - th.top : th.height / 2;
+  const move = (ev: PointerEvent): void => {
+    const free = r.height - th.height;
+    const f = free > 0 ? Math.min(1, Math.max(0, (ev.clientY - r.top - grab) / free)) : 0;
+    boardList.scrollTop = f * (boardList.scrollHeight - boardList.clientHeight);
+  };
+  move(e);
+  rail.setPointerCapture(e.pointerId);
+  rail.classList.add('held');
+  rail.onpointermove = move;
+  rail.onpointerup = rail.onpointercancel = () => { rail.onpointermove = null; rail.classList.remove('held'); };
+});
 function onWin(): void {
   finalMs = Math.max(0, sim.time - 1) * 1000; // the moment he got in, not the end of the 1 s hold
   document.getElementById('winTime')!.textContent = formatTime(finalMs);
